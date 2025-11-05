@@ -1,0 +1,14 @@
+# Archivo de configuración de Air
+
+root = "."
+tmp_dir = "tmp"
+
+[build]
+cmd = "go build -o ./tmp/main.exe ./src"
+bin = "tmp/main.exe"
+include_dir = ["src"]
+exclude_dir = ["tmp", "vendor"]
+include_ext = ["go", "html", "tmpl"]
+
+[log]
+time = true

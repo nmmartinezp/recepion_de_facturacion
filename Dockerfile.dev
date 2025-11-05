@@ -1,0 +1,24 @@
+# Dockerfile.dev
+FROM golang:1.25-alpine
+
+# Instalar git y herramientas necesarias
+RUN apk add --no-cache git bash
+
+# Instalar Air
+RUN go install github.com/air-verse/air@latest
+
+WORKDIR /app
+
+# Copiar módulos primero para cachear dependencias
+COPY go.mod go.sum ./
+RUN go mod tidy
+
+# Copiar todo el código fuente
+COPY .air.toml ./
+COPY . .
+
+# Exponer puerto
+EXPOSE 8080
+
+# Comando por defecto: usar Air
+CMD ["air", "-c", ".air.toml"]

@@ -1,0 +1,6 @@
+# archivos de variables de entorno
+.env
+.env.*
+
+# archivos air
+tmp
