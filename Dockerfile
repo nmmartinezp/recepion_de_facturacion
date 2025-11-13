@@ -33,7 +33,7 @@ WORKDIR /app
 COPY --from=builder /app/main .
 
 # Puerto expuesto
-EXPOSE 8080
+EXPOSE 3002
 
 # Comando para ejecutar la aplicación
 CMD ["./main"]

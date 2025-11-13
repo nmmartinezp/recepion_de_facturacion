@@ -3,7 +3,7 @@ package configs
 func VarConfig() Configuration {
 	config := Configuration{
 		App: AppConfig{
-			Port: getEnv("PORT", "8080"),
+			Port: getEnv("PORT", "3002"),
 			Env:  getEnv("ENV", "DEV"),
 		},
 		DB: map[string]DBConfig{
