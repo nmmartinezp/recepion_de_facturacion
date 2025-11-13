@@ -3,6 +3,7 @@ FROM golang:1.25-alpine
 
 # Instalar git y herramientas necesarias
 RUN apk add --no-cache git bash
+RUN go install github.com/swaggo/swag/cmd/swag@latest
 
 # Instalar Air
 RUN go install github.com/air-verse/air@latest
@@ -16,6 +17,9 @@ RUN go mod tidy
 # Copiar todo el código fuente
 COPY .air.toml ./
 COPY . .
+
+# Generar documentación Swagger
+RUN swag init -g src/main.go -o src/docs
 
 # Exponer puerto
 EXPOSE 8080

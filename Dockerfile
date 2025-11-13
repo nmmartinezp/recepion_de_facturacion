@@ -3,6 +3,7 @@ FROM golang:1.25-alpine AS builder
 
 # Instalar herramientas necesarias
 RUN apk add --no-cache git
+RUN go install github.com/swaggo/swag/cmd/swag@latest
 
 # Directorio de trabajo dentro del contenedor
 WORKDIR /app
@@ -15,6 +16,9 @@ RUN go mod tidy
 
 # Copiar todo el código fuente
 COPY . .
+
+# Generar documentación Swagger
+RUN swag init -g src/main.go -o src/docs
 
 # Compilar la aplicación
 RUN go build -o main ./src
