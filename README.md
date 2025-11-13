@@ -155,6 +155,8 @@ VALUES
 
 ## **Documentacion de API del servicio**
 
+La api se encuentra protegida con JWT que debe ser proporcionado por un servicio auth.
+
 El servicio contiene documentación `Swagger` que se puede consultar con la ruta base:
 
 ```http
