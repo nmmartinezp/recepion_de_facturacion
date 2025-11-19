@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"time"
 
+	"app/src/modules/common"
+
 	"gorm.io/gorm"
 )
 
@@ -20,18 +22,19 @@ type Service struct {
 
 // CreateFactura recibe una factura con su detalle, valida campos esenciales y la registra en la base de datos
 func (s *Service) CreateFactura(factura models.Factura) (models.Factura, error) {
+	var validationErrors []string
 	// 🔍 Validaciones básicas
 	if factura.CUF == "" {
-		return models.Factura{}, errors.New("el campo CUF es obligatorio")
+		validationErrors = append(validationErrors, "El campo CUF es obligatorio.")
 	}
 	if factura.NitEmisor == "" {
-		return models.Factura{}, errors.New("el NIT del emisor es obligatorio")
+		validationErrors = append(validationErrors, "El NIT del emisor es obligatorio.")
 	}
 	if factura.NitReceptor == "" {
-		return models.Factura{}, errors.New("el NIT del receptor es obligatorio")
+		validationErrors = append(validationErrors, "El NIT del receptor es obligatorio.")
 	}
 	if len(factura.Detalle) == 0 {
-		return models.Factura{}, errors.New("la factura debe tener al menos un detalle")
+		validationErrors = append(validationErrors, "La factura debe tener al menos un ítem en el detalle.")
 	}
 
 	// Si la fecha de emisión no viene en el JSON, la establecemos al momento actual
@@ -43,10 +46,10 @@ func (s *Service) CreateFactura(factura models.Factura) (models.Factura, error) 
 	var total float64 = 0
 	for i, d := range factura.Detalle {
 		if d.Cantidad <= 0 {
-			return models.Factura{}, fmt.Errorf("el detalle #%d tiene cantidad inválida", i+1)
+			validationErrors = append(validationErrors, fmt.Sprintf("El ítem #%d tiene una cantidad inválida.", i+1))
 		}
 		if d.PrecioUnitario <= 0 {
-			return models.Factura{}, fmt.Errorf("el detalle #%d tiene precio inválido", i+1)
+			validationErrors = append(validationErrors, fmt.Sprintf("El ítem #%d tiene un precio unitario inválido.", i+1))
 		}
 		total += float64(d.Cantidad) * d.PrecioUnitario
 	}
@@ -55,7 +58,19 @@ func (s *Service) CreateFactura(factura models.Factura) (models.Factura, error) 
 	if factura.MontoTotal <= 0 {
 		factura.MontoTotal = total
 	} else if factura.MontoTotal != total {
-		return models.Factura{}, fmt.Errorf("el monto total declarado (%.2f) no coincide con el calculado (%.2f)", factura.MontoTotal, total)
+		validationErrors = append(validationErrors, fmt.Sprintf("El monto total declarado (%.2f) no coincide con el calculado (%.2f).", factura.MontoTotal, total))
+	}
+
+	if len(validationErrors) > 0 {
+		common.PublishValidationResult(common.BillingValidationMessage{
+			EventID:   factura.CodigoControl,
+			EmpresaID: factura.NitReceptor,
+			NIT:       factura.NitEmisor,
+			Factura:   factura,
+			Errores:   validationErrors,
+			Resultado: "INVALID",
+		})
+		return models.Factura{}, fmt.Errorf("errores de validación: %v", validationErrors)
 	}
 
 	// 🧾 Guardar factura con sus detalles (transacción)

@@ -18,7 +18,13 @@ type AuthConfig struct {
 }
 
 type Configuration struct {
-	App  AppConfig
-	DB   map[string]DBConfig
-	Auth AuthConfig
+	App      AppConfig
+	DB       map[string]DBConfig
+	Auth     AuthConfig
+	RabbitMQ RabbitMQConfig
+}
+
+type RabbitMQConfig struct {
+	URL      string
+	Exchange string
 }

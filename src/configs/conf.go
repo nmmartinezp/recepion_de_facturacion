@@ -17,6 +17,10 @@ func VarConfig() Configuration {
 		Auth: AuthConfig{
 			JWTSecret: getEnv("JWT_SECRET", "your_jwt_secret_key"),
 		},
+		RabbitMQ: RabbitMQConfig{
+			URL:      getEnv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/"),
+			Exchange: getEnv("RABBITMQ_EXCHANGE", "billing_exchange"),
+		},
 	}
 
 	return config
