@@ -10,6 +10,7 @@ import (
 	"context"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 var authClient authpb.AuthServiceClient
@@ -17,8 +18,7 @@ var authConn *grpc.ClientConn
 
 func InitAuthGRPC() {
 	var err error
-	var opts []grpc.DialOption
-	authConn, err = grpc.NewClient("auth:50051", opts...)
+	authConn, err = grpc.NewClient("auth:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		panic("No se pudo conectar al servicio Auth gRPC: " + err.Error())
 	}
