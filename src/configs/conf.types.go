@@ -13,14 +13,9 @@ type DBConfig struct {
 	Host     string
 }
 
-type AuthConfig struct {
-	JWTSecret string
-}
-
 type Configuration struct {
 	App      AppConfig
 	DB       map[string]DBConfig
-	Auth     AuthConfig
 	RabbitMQ RabbitMQConfig
 }
 

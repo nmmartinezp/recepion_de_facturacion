@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package punto_venta;
+
+// Esta línea indica el path del paquete Go y cómo se importará
+option go_package = "src/proto/punto_venta;puntoventa";
+
+service PuntoVentaService {
+  rpc GetPuntoVenta (GetPuntoVentaRequest) returns (PuntoVentaResponse);
+  rpc GetCufdActual (GetCufdActualRequest) returns (CufdActualResponse);
+  rpc ValidarCufd (ValidarCufdRequest) returns (ValidarCufdResponse);
+}
+
+/* ------------------------------- REQUESTS ------------------------------- */
+
+message GetPuntoVentaRequest {
+  string nit = 1;
+  string codigoSucursal = 2;
+  string codigoPuntoVenta = 3;
+}
+
+message GetCufdActualRequest {
+  string nit = 1;
+  string codigoSucursal = 2;
+  string codigoPuntoVenta = 3;
+}
+
+message ValidarCufdRequest {
+  string nit = 1;
+  string codigoSucursal = 2;
+  string codigoPuntoVenta = 3;
+  string cufd = 4;
+}
+
+/* ------------------------------- RESPONSES ------------------------------- */
+
+message PuntoVentaResponse {
+  string nit = 1;
+  string codigoSucursal = 2;
+  string codigoPuntoVenta = 3;
+  string descripcion = 4;
+  string tipoPuntoVenta = 5;
+  string estado = 6;
+}
+
+message CufdActualResponse {
+  string codigo = 1;
+  string codigoControl = 2;
+  string fechaVigencia = 3;
+  bool transaccion = 4;
+  bool existe = 5; // true si existe, false si no tiene CUFD todavía
+}
+
+message ValidarCufdResponse {
+  bool valido = 1;
+  string motivo = 2;
+  string fechaVigencia = 3;
+}

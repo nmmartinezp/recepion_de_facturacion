@@ -1,5 +1,5 @@
 # Environment configuration
-ENV= # PROD o DEV
+ENV=
 PORT=
 
 # db postgres
@@ -9,5 +9,6 @@ DB_POSTGRES_PASSWORD=
 DB_POSTGRES_NAME=
 DB_POSTGRES_PORT=
 
-# JWT
-JWT_SECRET=
+# RabbitMQ
+RABBITMQ_URL=
+RABBITMQ_EXCHANGE=

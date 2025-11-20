@@ -1,31 +1,33 @@
 package models
 
-import (
-	"time"
+import "time"
 
-	"gorm.io/gorm"
+type EstadoFactura string
+
+const (
+	EstadoActivo  EstadoFactura = "ACTIVO"
+	EstadoAnulado EstadoFactura = "ANULADO"
 )
 
 type Factura struct {
-	ID                uint      `gorm:"primaryKey;autoIncrement" json:"id"`
-	CUF               string    `gorm:"size:50;not null;unique" json:"cuf"`
-	NitEmisor         string    `gorm:"size:20;not null" json:"nitEmisor"`
-	RazonSocialEmisor string    `gorm:"size:100;not null" json:"razonSocialEmisor"`
-	FechaEmision      time.Time `json:"fechaEmision"`
-	NitReceptor       string    `gorm:"size:20;not null" json:"nitReceptor"`
-	MontoTotal        float64   `gorm:"type:decimal(10,2);not null" json:"montoTotal"`
-	MontoDescuento    float64   `gorm:"type:decimal(10,2);default:0" json:"montoDescuento"`
-	CodigoMetodoPago  int       `json:"codigoMetodoPago"`
-	CodigoControl     string    `gorm:"size:50" json:"codigoControl"`
-	FirmaDigital      string    `gorm:"type:text" json:"firmaDigital"`
+	ID                uint64        `gorm:"primaryKey;autoIncrement" json:"id"`
+	CUF               string        `gorm:"type:varchar(100);unique;not null" json:"cuf"`
+	CUFD              string        `gorm:"type:varchar(100);unique;not null" json:"cufd"`
+	NitEmisor         string        `gorm:"type:varchar(100);not null" json:"nit_emisor"`
+	CodigoSucursal    string        `gorm:"type:varchar(100);not null" json:"codigo_sucursal"`
+	CodigoPuntoVenta  string        `gorm:"type:varchar(100);not null" json:"codigo_pv"`
+	RazonSocialEmisor string        `gorm:"type:varchar(100);not null" json:"razon_social_emisor"`
+	FechaEmision      time.Time     `gorm:"not null" json:"fecha_emision"`
+	NitEmpresa        string        `gorm:"type:varchar(20);not null" json:"nit_empresa"`
+	MontoTotal        float64       `gorm:"type:numeric(10,2);not null" json:"monto_total"`
+	CodigoControl     string        `gorm:"type:varchar(50)" json:"codigo_control"`
+	Estado            EstadoFactura `gorm:"type:estado_factura;not null" json:"estado"`
+	CreatedAt         time.Time     `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt         time.Time     `gorm:"autoUpdateTime" json:"updated_at"`
+	DeletedAt         *time.Time    `gorm:"index" json:"deleted_at"`
 
-	// Relación uno-a-muchos con Detalle
-	Detalle []Detalle `gorm:"foreignKey:FacturaID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"detalle"`
-
-	// Campos de auditoría opcionales
-	CreatedAt time.Time      `json:"createdAt"`
-	UpdatedAt time.Time      `json:"updatedAt"`
-	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+	// Relación 1:N con detalles
+	Detalles []Detalle `gorm:"foreignKey:FacturaID" json:"detalles"`
 }
 
 // TableName devuelve el nombre correcto de la tabla en PostgreSQL

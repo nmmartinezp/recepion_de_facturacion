@@ -1,7 +1,6 @@
 package facturacion
 
 import (
-	"app/src/models"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -71,21 +70,23 @@ func (c *Controller) GetFacturaByCUF(ctx *gin.Context) {
 // @Tags Facturación
 // @Accept json
 // @Produce json
-// @Param factura body models.Factura true "Datos de la factura a registrar"
+// @Param factura body FacturaRequest true "Datos de la factura a registrar"
 // @Success 201 {object} models.Factura
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /facturacion/facturas [post]
 // @Security BearerAuth
 func (c *Controller) CreateFactura(ctx *gin.Context) {
-	var input models.Factura
+	var req FacturaRequest
 
-	if err := ctx.ShouldBindJSON(&input); err != nil {
+	// Bind JSON al DTO
+	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "JSON inválido: " + err.Error()})
 		return
 	}
 
-	created, err := c.service.CreateFactura(input)
+	// Mandar el DTO directamente al servicio
+	created, err := c.service.CreateFactura(req)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

@@ -3,61 +3,59 @@ package middlewares
 import (
 	"net/http"
 	"strings"
-	"time"
-
-	"app/src/configs"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
+
+	authpb "app/src/proto/auth"
+	"context"
+
+	"google.golang.org/grpc"
 )
 
-var jwtSecret = []byte(configs.VarConfig().Auth.JWTSecret)
+var authClient authpb.AuthServiceClient
+var authConn *grpc.ClientConn
 
-// GenerateToken genera un JWT válido por 24 horas
-func GenerateToken(userID uint) (string, error) {
-	claims := jwt.MapClaims{
-		"user_id": userID,
-		"exp":     time.Now().Add(time.Hour * 24).Unix(), // expira en 24h
+func InitAuthGRPC() {
+	var err error
+	authConn, err = grpc.NewClient("auth:50051")
+	if err != nil {
+		panic("No se pudo conectar al servicio Auth gRPC: " + err.Error())
 	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtSecret)
+	authClient = authpb.NewAuthServiceClient(authConn)
 }
 
 // AuthMiddleware valida el token JWT
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
-
 		if authHeader == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token no proporcionado"})
 			c.Abort()
 			return
 		}
 
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-		token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
-			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, jwt.ErrSignatureInvalid
-			}
-			return jwtSecret, nil
+		token := strings.TrimPrefix(authHeader, "Bearer ")
+
+		// Llamada gRPC al servicio Auth
+		resp, err := authClient.VerifyToken(context.Background(), &authpb.VerifyTokenRequest{
+			Token: token,
 		})
 
-		if err != nil || !token.Valid {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token inválido o expirado"})
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Error al validar token: " + err.Error()})
 			c.Abort()
 			return
 		}
 
-		claims, ok := token.Claims.(jwt.MapClaims)
-		if !ok {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Error en los claims"})
+		if !resp.Valid {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token inválido"})
 			c.Abort()
 			return
 		}
 
-		// Guardamos el user_id dentro del contexto para acceder en los controladores
-		c.Set("user_id", claims["user_id"])
+		// Guardamos user info en contexto
+		c.Set("user_id", resp.UserId)
+		c.Set("username", resp.Username)
 		c.Next()
 	}
 }
