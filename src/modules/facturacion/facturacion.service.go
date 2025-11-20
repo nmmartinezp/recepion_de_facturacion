@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"app/src/modules/common"
 
@@ -14,6 +15,7 @@ import (
 	punto_venta "app/src/proto/punto_venta"
 
 	"google.golang.org/grpc"
+	insecure "google.golang.org/grpc/credentials/insecure"
 )
 
 type Service struct {
@@ -217,7 +219,25 @@ func (s *Service) ValidarCufd(nit, sucursal, puntoVenta, cufd string) (bool, str
 // ===========================
 
 func GetService() *Service {
-	conn, err := grpc.NewClient("servicio-empresas-cufd:50053")
+	var conn *grpc.ClientConn
+	var err error
+
+	// Intentos de reconexión
+	for i := 0; i < 10; i++ {
+		conn, err = grpc.Dial(
+			"servicio-empresas-cufd:50053",
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+			grpc.WithBlock(), // esperar conexión
+		)
+
+		if err == nil {
+			break
+		}
+
+		fmt.Println("Reintentando conexión gRPC...", err)
+		time.Sleep(2 * time.Second)
+	}
+
 	if err != nil {
 		panic("No se pudo conectar al servicio PuntoVenta: " + err.Error())
 	}
