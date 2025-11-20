@@ -1,10 +1,8 @@
 package middlewares
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -12,35 +10,19 @@ import (
 	"context"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 var authClient authpb.AuthServiceClient
+var authConn *grpc.ClientConn
 
 func InitAuthGRPC() {
-	var conn *grpc.ClientConn
 	var err error
-
-	// Intentos de reconexión
-	for i := 0; i < 10; i++ {
-		conn, err = grpc.Dial(
-			"auth-service:50051",
-			grpc.WithTransportCredentials(insecure.NewCredentials()),
-			grpc.WithBlock(), // esperar conexión
-		)
-
-		if err == nil {
-			break
-		}
-
-		fmt.Println("Reintentando conexión gRPC...", err)
-		time.Sleep(2 * time.Second)
-	}
-
+	var opts []grpc.DialOption
+	authConn, err = grpc.NewClient("auth:50051", opts...)
 	if err != nil {
-		panic("No se pudo conectar al servicio PuntoVenta: " + err.Error())
+		panic("No se pudo conectar al servicio Auth gRPC: " + err.Error())
 	}
-	authClient = authpb.NewAuthServiceClient(conn)
+	authClient = authpb.NewAuthServiceClient(authConn)
 }
 
 // AuthMiddleware valida el token JWT
